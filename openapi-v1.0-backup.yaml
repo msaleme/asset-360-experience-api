@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: Asset 360 Experience API
+  version: v1
+  description: |
+    The Asset 360 Experience API provides a comprehensive, consolidated view of industrial assets 
+    by orchestrating data from multiple backend systems including Maximo and SCADA. This Experience 
+    API layer is specifically designed to support Salesforce Field Service operations by delivering 
+    a unified data model that combines asset summaries, operational status, and real-time sensor 
+    readings in a single, streamlined interface.
+  contact:
+    name: API Support Team
+    email: api-support@company.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api/v1
+    description: Base API path
+paths:
+  /assets/{assetId}/detail:
+    get:
+      tags:
+        - Assets
+      summary: Retrieve comprehensive asset details with sensor data
+      description: |
+        This Experience API layer operation orchestrates data from back-end System APIs 
+        (including Maximo and SCADA systems) to present a consolidated 360-degree view 
+        of asset information. The API aggregates asset summary data, operational status, 
+        and real-time sensor readings to provide a unified data model specifically 
+        designed for consumption by the Salesforce Field Service application. This 
+        orchestration layer abstracts the complexity of multiple backend systems and 
+        presents a streamlined, business-focused view of critical asset information.
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          description: Unique identifier for the asset
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response returning a JSON object with comprehensive asset details and associated sensor readings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetailResponse'
+              example:
+                assetSummary:
+                  assetId: "PUMP001"
+                  name: "Primary Circulation Pump"
+                  currentStatus: "OPERATIONAL"
+                  lastRunHours: 168.5
+                  currentPressurePsi: 125.7
+                  operationalRegion: "North Plant"
+                  flaggedAlerts: 2
+                sensorReadings:
+                  - readingId: "SR001"
+                    timestamp: "2023-12-17T19:30:00Z"
+                    pressurePsi: 125.7
+                    temperatureC: 85.2
+                    vibrationRMS: 2.1
+                    isAnomaly: false
+                  - readingId: "SR002"
+                    timestamp: "2023-12-17T19:25:00Z"
+                    pressurePsi: 126.1
+                    temperatureC: 84.8
+                    vibrationRMS: 2.3
+                    isAnomaly: true
+        '404':
+          description: Asset not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Asset not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
+components:
+  schemas:
+    AssetSummary:
+      type: object
+      required:
+        - assetId
+        - name
+        - currentStatus
+        - lastRunHours
+        - currentPressurePsi
+        - operationalRegion
+        - flaggedAlerts
+      properties:
+        assetId:
+          type: string
+          description: Unique identifier for the asset
+        name:
+          type: string
+          description: Name of the asset
+        currentStatus:
+          type: string
+          description: Current operational status of the asset
+        lastRunHours:
+          type: number
+          format: float
+          description: Hours since last run
+        currentPressurePsi:
+          type: number
+          format: float
+          description: Current pressure in PSI
+        operationalRegion:
+          type: string
+          description: Operational region where the asset is located
+        flaggedAlerts:
+          type: integer
+          description: Number of flagged alerts for the asset
+
+    SensorReading:
+      type: object
+      properties:
+        readingId:
+          type: string
+          description: Unique identifier for the sensor reading
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the reading was taken
+        pressurePsi:
+          type: number
+          format: float
+          description: Pressure reading in PSI
+        temperatureC:
+          type: number
+          format: float
+          description: Temperature reading in Celsius
+        vibrationRMS:
+          type: number
+          format: float
+          description: Vibration reading in RMS
+        isAnomaly:
+          type: boolean
+          description: Indicates if the reading is considered an anomaly
+
+    AssetDetailResponse:
+      type: object
+      required:
+        - assetSummary
+        - sensorReadings
+      properties:
+        assetSummary:
+          $ref: '#/components/schemas/AssetSummary'
+        sensorReadings:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorReading'
+          description: Array of sensor readings for the asset

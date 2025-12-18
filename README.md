@@ -15,9 +15,9 @@ The Asset 360 Experience API delivers a unified, real-time view of critical ener
 - **💰 Cost Optimization:** Reduces emergency repair costs through predictive insights
 
 ## API Specification
-- **Version**: v1 (1.0.0)
+- **Version**: v1.1 (1.1.0)
 - **Format**: OpenAPI 3.0.3
-- **Base URL**: `https://asset-360-exp-api.us-e2.cloudhub.io/api/v1`
+- **Base URL**: `https://energy-asset-360-exp.us-e2.cloudhub.io/api/v1`
 - **Runtime**: Mule 4.10 on CloudHub 2.0
 - **Authentication**: Client ID Enforcement + Salesforce Named Credentials
 
@@ -27,8 +27,34 @@ The Asset 360 Experience API delivers a unified, real-time view of critical ener
 - **🎯 Field Service Optimized**: Purpose-built for mobile field technician workflows
 - **🔒 Enterprise Security**: Client ID enforcement, OAuth 2.0, and audit-compliant logging
 - **📈 Performance Engineered**: Sub-500ms response times with auto-scaling architecture
+- **🔍 Asset Discovery**: Browse and search available energy infrastructure assets
 
 ## Endpoints
+
+### GET /assets
+Enables field technicians to browse and search available energy infrastructure assets. Returns a list of assets to mimic a Salesforce search or "Discovery" view, perfect for Houston Oil & Gas operations.
+
+**Response Example:**
+```json
+[
+  {
+    "assetId": "02i8W00000GvXYZ",
+    "name": "Wellhead Pump Alpha-7",
+    "serialNumber": "SN-PMP-9901",
+    "status": "Installed",
+    "currentStatus": "Warning",
+    "operationalRegion": "Permian Basin"
+  },
+  {
+    "assetId": "02i8W00000GvABC", 
+    "name": "Turbine Gamma-2",
+    "serialNumber": "SN-TRB-4412",
+    "status": "Registered",
+    "currentStatus": "Online",
+    "operationalRegion": "Eagle Ford"
+  }
+]
+```
 
 ### GET /assets/{assetId}/detail
 Retrieves comprehensive asset details with real-time sensor telemetry, optimized for field technician dashboards.

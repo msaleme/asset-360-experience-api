@@ -44,6 +44,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validated OpenAPI 3.0 specification
 - Production-ready API specification with complete examples
 
+## [1.1.0] - 2025-12-18
+
+### Added
+- New `/assets` endpoint for asset discovery and browsing functionality
+- Enhanced security with client_id enforcement and proper authentication headers
+- CloudHub-ready server configuration with production deployment settings
+- Oil & Gas industry-specific data models and terminology (wellhead pumps, turbines)
+- GPS location data with well site identifiers for field operations
+- Enhanced sensor readings with flow rate and power consumption metrics
+- Comprehensive error handling with 401, 404, and 500 response codes
+- Response metadata for debugging and monitoring capabilities
+- Alert thresholds for configurable anomaly detection
+
+### Changed
+- Updated API version from v1.0 to v1.1 
+- Enhanced AssetSummary schema with Salesforce-aligned status fields
+- Improved SensorReading schema with additional industrial IoT measurements
+- Updated server configuration for CloudHub 2.0 deployment
+- Enhanced API description to focus on Houston Oil & Gas meetup use case
+
+### Enhanced
+- Merged comprehensive sensor model from v1.0 with new oil & gas features
+- Added production-ready security implementation
+- Included location/GPS data for field service operations
+- Added performance-focused response headers and metadata
+
 ## [Unreleased]
 
 ### Planned Features

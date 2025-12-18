@@ -1,155 +1,324 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Asset 360 Experience API
-  version: v1
+  title: Energy Asset 360 Experience API
+  version: v1.1
   description: |
-    The Asset 360 Experience API provides a comprehensive, consolidated view of industrial assets 
-    by orchestrating data from multiple backend systems including Maximo and SCADA. This Experience 
-    API layer is specifically designed to support Salesforce Field Service operations by delivering 
-    a unified data model that combines asset summaries, operational status, and real-time sensor 
-    readings in a single, streamlined interface.
+    Experience API for Houston Oil & Gas meetup. 
+    Orchestrates discovery and health details for high-value field assets.
+    
+    The Asset 360 Experience API provides field technicians with a real-time view 
+    of critical infrastructure assets by orchestrating data from multiple backend systems 
+    including Maximo and SCADA. This Experience API layer abstracts the complexity 
+    of multiple backend systems and presents a streamlined, business-focused view 
+    of critical asset information designed for Salesforce Field Service operations.
   contact:
     name: API Support Team
-    email: api-support@company.com
+    email: api-support@energy360.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 servers:
+  - url: https://{cloudhub-app-name}.us-e2.cloudhub.io/api/v1
+    description: CloudHub Production Environment
+    variables:
+      cloudhub-app-name:
+        default: energy-asset-360-exp
   - url: /api/v1
-    description: Base API path
+    description: Local development server
+
+security:
+  - client_id_enforcement: []
+
 paths:
-  /assets/{assetId}/detail:
+  /assets:
     get:
+      summary: Discover available assets
+      operationId: listAssets
       tags:
         - Assets
-      summary: Retrieve comprehensive asset details with sensor data
+      description: |
+        Enables field technicians to browse and search available energy infrastructure assets. 
+        Returns a list of assets to mimic a Salesforce search or "Discovery" view.
+      responses:
+        '200':
+          description: A list of energy assets with summary information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetSummary'
+              example:
+                - assetId: "02i8W00000GvXYZ"
+                  name: "Wellhead Pump Alpha-7"
+                  serialNumber: "SN-PMP-9901"
+                  status: "Installed"
+                  currentStatus: "Warning"
+                  operationalRegion: "Permian Basin"
+                - assetId: "02i8W00000GvABC"
+                  name: "Turbine Gamma-2"
+                  serialNumber: "SN-TRB-4412"
+                  status: "Registered"
+                  currentStatus: "Online"
+                  operationalRegion: "Eagle Ford"
+        '401':
+          description: Unauthorized - Client ID or Secret missing/invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /assets/{assetId}/detail:
+    get:
+      summary: Get comprehensive 360-degree asset status
+      operationId: getAssetDetail
+      tags:
+        - Assets
       description: |
         This Experience API layer operation orchestrates data from back-end System APIs 
         (including Maximo and SCADA systems) to present a consolidated 360-degree view 
         of asset information. The API aggregates asset summary data, operational status, 
         and real-time sensor readings to provide a unified data model specifically 
-        designed for consumption by the Salesforce Field Service application. This 
-        orchestration layer abstracts the complexity of multiple backend systems and 
-        presents a streamlined, business-focused view of critical asset information.
+        designed for consumption by the Salesforce Field Service application.
       parameters:
         - name: assetId
           in: path
           required: true
-          description: Unique identifier for the asset
+          description: Unique identifier for the asset (Salesforce Asset Record ID)
           schema:
             type: string
+          example: "02i8W00000GvXYZ"
       responses:
         '200':
-          description: Successful response returning a JSON object with comprehensive asset details and associated sensor readings
+          description: Consolidated asset summary and sensor history
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetDetailResponse'
               example:
                 assetSummary:
-                  assetId: "PUMP001"
-                  name: "Primary Circulation Pump"
-                  currentStatus: "OPERATIONAL"
+                  assetId: "02i8W00000GvXYZ"
+                  name: "Wellhead Pump Alpha-7"
+                  serialNumber: "SN-PMP-9901"
+                  status: "Installed"
+                  currentStatus: "Warning"
                   lastRunHours: 168.5
-                  currentPressurePsi: 125.7
-                  operationalRegion: "North Plant"
+                  currentPressurePsi: 852.4
+                  operationalRegion: "Permian Basin"
                   flaggedAlerts: 2
+                  location:
+                    latitude: 31.8457
+                    longitude: -102.3676
+                    wellSite: "Site-Alpha-7"
+                  lastMaintenance: "2025-11-15T10:30:00Z"
+                  nextScheduledMaintenance: "2025-12-20T08:00:00Z"
                 sensorReadings:
-                  - readingId: "SR001"
-                    timestamp: "2023-12-17T19:30:00Z"
-                    pressurePsi: 125.7
-                    temperatureC: 85.2
+                  - readingId: "SR-5521"
+                    timestamp: "2025-12-18T08:00:00Z"
+                    pressurePsi: 852.4
+                    temperatureC: 110.5
                     vibrationRMS: 2.1
-                    isAnomaly: false
-                  - readingId: "SR002"
-                    timestamp: "2023-12-17T19:25:00Z"
-                    pressurePsi: 126.1
-                    temperatureC: 84.8
-                    vibrationRMS: 2.3
+                    flowRateGPM: 125.8
+                    powerConsumptionKW: 45.2
                     isAnomaly: true
+                  - readingId: "SR-5522"
+                    timestamp: "2025-12-18T07:55:00Z"
+                    pressurePsi: 848.2
+                    temperatureC: 108.9
+                    vibrationRMS: 1.8
+                    flowRateGPM: 127.3
+                    powerConsumptionKW: 44.8
+                    isAnomaly: false
+        '401':
+          description: Unauthorized - Client ID or Secret missing/invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Asset not found
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Asset not found"
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Asset not found"
+                code: "ASSET_NOT_FOUND"
+                timestamp: "2025-12-18T08:00:00Z"
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Internal server error"
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
+  securitySchemes:
+    client_id_enforcement:
+      type: apiKey
+      in: header
+      name: client_id
+      description: |
+        Use client_id from Anypoint Exchange. Requires client_secret in header.
+        Authentication is enforced via Salesforce Named Credentials for seamless integration.
+
   schemas:
     AssetSummary:
       type: object
       required:
         - assetId
         - name
+        - serialNumber
+        - status
         - currentStatus
-        - lastRunHours
-        - currentPressurePsi
         - operationalRegion
-        - flaggedAlerts
       properties:
-        assetId:
+        assetId: 
           type: string
-          description: Unique identifier for the asset
-        name:
+          description: Unique identifier for the asset (Salesforce Asset Record ID)
+          example: "02i8W00000GvXYZ"
+        name: 
           type: string
-          description: Name of the asset
+          description: Display name of the asset
+          example: "Wellhead Pump Alpha-7"
+        serialNumber:
+          type: string
+          description: Serial number of the asset
+          example: "SN-PMP-9901"
+        status:
+          type: string
+          description: Salesforce standard lifecycle status
+          enum: ["Registered", "Installed", "Shipped", "Decommissioned"]
+          example: "Installed"
         currentStatus:
           type: string
-          description: Current operational status of the asset
+          description: Real-time operational status from SCADA systems
+          enum: ["Online", "Warning", "Critical", "Offline"]
+          example: "Warning"
         lastRunHours:
           type: number
           format: float
-          description: Hours since last run
+          description: Cumulative hours since last run cycle
+          example: 168.5
         currentPressurePsi:
           type: number
           format: float
-          description: Current pressure in PSI
+          description: Current pressure reading in PSI
+          example: 852.4
         operationalRegion:
           type: string
-          description: Operational region where the asset is located
+          description: Geographic operational region
+          example: "Permian Basin"
         flaggedAlerts:
           type: integer
-          description: Number of flagged alerts for the asset
+          description: Number of active alerts flagged for this asset
+          example: 2
+        location:
+          $ref: '#/components/schemas/AssetLocation'
+        lastMaintenance:
+          type: string
+          format: date-time
+          description: Timestamp of last maintenance activity
+          example: "2025-11-15T10:30:00Z"
+        nextScheduledMaintenance:
+          type: string
+          format: date-time
+          description: Timestamp of next scheduled maintenance
+          example: "2025-12-20T08:00:00Z"
+
+    AssetLocation:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+          description: GPS latitude coordinate
+          example: 31.8457
+        longitude:
+          type: number
+          format: float
+          description: GPS longitude coordinate
+          example: -102.3676
+        wellSite:
+          type: string
+          description: Well site identifier
+          example: "Site-Alpha-7"
 
     SensorReading:
       type: object
+      required:
+        - readingId
+        - timestamp
+        - pressurePsi
+        - isAnomaly
       properties:
-        readingId:
+        readingId: 
           type: string
           description: Unique identifier for the sensor reading
-        timestamp:
+          example: "SR-5521"
+        timestamp: 
           type: string
           format: date-time
-          description: Timestamp when the reading was taken
-        pressurePsi:
+          description: ISO 8601 timestamp when the reading was captured
+          example: "2025-12-18T08:00:00Z"
+        pressurePsi: 
           type: number
           format: float
           description: Pressure reading in PSI
+          example: 852.4
         temperatureC:
           type: number
           format: float
           description: Temperature reading in Celsius
+          example: 110.5
         vibrationRMS:
           type: number
           format: float
-          description: Vibration reading in RMS
-        isAnomaly:
+          description: Vibration reading in RMS value
+          example: 2.1
+        flowRateGPM:
+          type: number
+          format: float
+          description: Flow rate in gallons per minute
+          example: 125.8
+        powerConsumptionKW:
+          type: number
+          format: float
+          description: Power consumption in kilowatts
+          example: 45.2
+        isAnomaly: 
           type: boolean
-          description: Indicates if the reading is considered an anomaly
+          description: AI-powered anomaly detection flag
+          example: true
+        alertThreshold:
+          $ref: '#/components/schemas/AlertThreshold'
+
+    AlertThreshold:
+      type: object
+      description: Configurable threshold values for anomaly detection
+      properties:
+        pressureMax:
+          type: number
+          format: float
+          example: 900.0
+        temperatureMax:
+          type: number
+          format: float
+          example: 120.0
+        vibrationMax:
+          type: number
+          format: float
+          example: 1.0
+        flowRateMin:
+          type: number
+          format: float
+          example: 100.0
 
     AssetDetailResponse:
       type: object
@@ -163,4 +332,49 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SensorReading'
-          description: Array of sensor readings for the asset
+          description: Array of recent sensor readings for the asset
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ResponseMetadata:
+      type: object
+      description: Response metadata for debugging and monitoring
+      properties:
+        responseTime:
+          type: string
+          format: date-time
+          example: "2025-12-18T08:00:25.123Z"
+        dataSourcesQueried:
+          type: array
+          items:
+            type: string
+          example: ["Maximo", "SCADA", "SAP"]
+        cacheStatus:
+          type: string
+          enum: ["FRESH", "CACHED", "STALE"]
+          example: "FRESH"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Asset not found"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "ASSET_NOT_FOUND"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when error occurred
+          example: "2025-12-18T08:00:00Z"
+        details:
+          type: string
+          description: Additional error details for debugging
+          example: "Asset ID 02i8W00000GvXYZ does not exist in Maximo system"
